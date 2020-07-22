@@ -66,13 +66,17 @@ class PID {
   private:
     void Initialize();
 
-    double dispKp;				// * we'll hold on to the tuning parameters in user-entered 
-    double dispKi;				//   format for display purposes
-    double dispKd;				//
+    // Multiplies kp, ki, and kd by -1, for reasons
+    void InvertTunings();
 
-    double kp;                  // * (P)roportional Tuning Parameter
-    double ki;                  // * (I)ntegral Tuning Parameter
-    double kd;                  // * (D)erivative Tuning Parameter
+    // Hold on to the tuning parameters in user-entered format for display purposes
+    double dispKp;
+    double dispKi;
+    double dispKd;
+
+    double kp;  // (P)roportional Tuning Parameter
+    double ki;  // (I)ntegral Tuning Parameter
+    double kd;  // (D)erivative Tuning Parameter
 
     int controllerDirection;
     int pOn;

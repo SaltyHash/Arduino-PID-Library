@@ -64,9 +64,8 @@ PID::PID(
 ) :PID::PID(Input, Output, Setpoint, Kp, Ki, Kd, P_ON_E, ControllerDirection) {}
 
 
-bool PID::ReadyToCompute(unsigned long now) {
-  unsigned long timeChange = now - lastTime;
-  return timeChange >= SampleTime;
+bool PID::ReadyToCompute(const unsigned long now) {
+  return (now - lastTime) >= SampleTime;
 }
 
 
@@ -88,27 +87,23 @@ bool PID::Compute() {
   }
 
   /*Compute all the working error variables*/
-  double input = *myInput;
-  double error = *mySetpoint - input;
-  double dInput = (input - lastInput);
-  outputSum += (ki * error);
+  const double input = *myInput;
+  const double error = *mySetpoint - input;
+  const double dInput = (input - lastInput);
+  outputSum += ki * error;
 
   /*Add Proportional on Measurement, if P_ON_M is specified*/
   if (!pOnE) outputSum -= kp * dInput;
 
-  if (outputSum > outMax) outputSum = outMax;
-  else if (outputSum < outMin) outputSum = outMin;
+  outputSum = constrain(outputSum, outMin, outMax);
 
   /*Add Proportional on Error, if P_ON_E is specified*/
-  double output;
-  if (pOnE) output = kp * error;
-  else output = 0;
+  double output = pOnE ? kp * error : 0;
 
   /*Compute Rest of PID Output*/
   output += outputSum - kd * dInput;
 
-  if (output > outMax) output = outMax;
-  else if (output < outMin) output = outMin;
+  output = constrain(output, outMin, outMax);
   *myOutput = output;
 
   /*Remember some variables for next time*/
@@ -138,9 +133,7 @@ void PID::SetTunings(double Kp, double Ki, double Kd, int POn) {
   kd = Kd / SampleTimeInSec;
 
   if (controllerDirection == REVERSE) {
-    kp = (0 - kp);
-    ki = (0 - ki);
-    kd = (0 - kd);
+    InvertTunings();
   }
 }
 
@@ -177,16 +170,13 @@ void PID::SetSampleTime(int NewSampleTime) {
  *  here.
  **************************************************************************/
 void PID::SetOutputLimits(double Min, double Max) {
-  if(Min >= Max) return;
+  if (Min >= Max) return;
   outMin = Min;
   outMax = Max;
 
   if (inAuto) {
-    if(*myOutput > outMax) *myOutput = outMax;
-    else if(*myOutput < outMin) *myOutput = outMin;
-
-    if(outputSum > outMax) outputSum= outMax;
-    else if(outputSum < outMin) outputSum= outMin;
+    *myOutput = constrain(*myOutput, outMin, outMax);
+    outputSum = constrain(outputSum, outMin, outMax);
   }
 }
 
@@ -213,8 +203,14 @@ void PID::SetMode(int Mode) {
 void PID::Initialize() {
   outputSum = *myOutput;
   lastInput = *myInput;
-  if(outputSum > outMax) outputSum = outMax;
-  else if(outputSum < outMin) outputSum = outMin;
+  outputSum = constrain(outputSum, outMin, outMax);
+}
+
+
+void PID::InvertTunings() {
+  kp *= -1;
+  ki *= -1;
+  kd *= -1;
 }
 
 
@@ -226,9 +222,7 @@ void PID::Initialize() {
  ******************************************************************************/
 void PID::SetControllerDirection(int Direction) {
   if (inAuto && Direction != controllerDirection) {
-    kp = (0 - kp);
-    ki = (0 - ki);
-    kd = (0 - kd);
+    InvertTunings();
   }
   controllerDirection = Direction;
 }
