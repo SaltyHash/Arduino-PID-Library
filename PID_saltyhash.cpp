@@ -1,9 +1,12 @@
 /**********************************************************************************************
  * Arduino PID Library - Version 1.2.1
- * by Brett Beauregard <br3ttb@gmail.com> brettbeauregard.com
+ * Authors:
+ * - Brett Beauregard <br3ttb@gmail.com> brettbeauregard.com
+ * - Austin Bowen <austin.bowen.314@gmail.com> github.com/SaltyHash
  *
  * This Library is licensed under the MIT License
  **********************************************************************************************/
+
 
 #if ARDUINO >= 100
   #include "Arduino.h"
@@ -13,12 +16,21 @@
 
 #include <PID_saltyhash.h>
 
+
 /*Constructor (...)*********************************************************
  *    The parameters specified here are those for for which we can't set up
  *    reliable defaults, so we need to have the user set them.
  ***************************************************************************/
-PID::PID(double* Input, double* Output, double* Setpoint,
-        double Kp, double Ki, double Kd, int POn, int ControllerDirection) {
+PID::PID(
+    double* Input,
+    double* Output,
+    double* Setpoint,
+    double Kp,
+    double Ki,
+    double Kd,
+    int POn,
+    int ControllerDirection
+) {
   myOutput = Output;
   myInput = Input;
   mySetpoint = Setpoint;
@@ -30,21 +42,26 @@ PID::PID(double* Input, double* Output, double* Setpoint,
    // Default Controller Sample Time is 0.1 seconds
   SampleTime = 100;
 
-   PID::SetControllerDirection(ControllerDirection);
+  PID::SetControllerDirection(ControllerDirection);
   PID::SetTunings(Kp, Ki, Kd, POn);
 
   lastTime = millis() - SampleTime;
 }
 
+
 /*Constructor (...)*********************************************************
  *    To allow backwards compatability for v1.1, or for people that just want
  *    to use Proportional on Error without explicitly saying so
  ***************************************************************************/
-
-PID::PID(double* Input, double* Output, double* Setpoint,
-        double Kp, double Ki, double Kd, int ControllerDirection)
-    :PID::PID(Input, Output, Setpoint, Kp, Ki, Kd, P_ON_E, ControllerDirection)
-{}
+PID::PID(
+    double* Input,
+    double* Output,
+    double* Setpoint,
+    double Kp, 
+    double Ki, 
+    double Kd, 
+    int ControllerDirection
+) :PID::PID(Input, Output, Setpoint, Kp, Ki, Kd, P_ON_E, ControllerDirection) {}
 
 
 bool PID::ReadyToCompute(unsigned long now) {
@@ -60,6 +77,8 @@ bool PID::ReadyToCompute(unsigned long now) {
  *   false when nothing has been done.
  **********************************************************************************/
 bool PID::Compute() {
+  // Do nothing if the controller is not in AUTOMATIC mode,
+  // or if it is not yet time to compute.
   if (!inAuto) {
     return false;
   }
@@ -99,6 +118,7 @@ bool PID::Compute() {
   return true;
 }
 
+
 /* SetTunings(...)*************************************************************
  * This function allows the controller's dynamic performance to be adjusted.
  * it's called automatically from the constructor, but tunings can also
@@ -124,12 +144,14 @@ void PID::SetTunings(double Kp, double Ki, double Kd, int POn) {
   }
 }
 
+
 /* SetTunings(...)*************************************************************
  * Set Tunings using the last-rembered POn setting
  ******************************************************************************/
 void PID::SetTunings(double Kp, double Ki, double Kd){
   SetTunings(Kp, Ki, Kd, pOn); 
 }
+
 
 /* SetSampleTime(...) *********************************************************
  * sets the period, in Milliseconds, at which the calculation is performed
@@ -144,6 +166,7 @@ void PID::SetSampleTime(int NewSampleTime) {
   kd /= ratio;
   SampleTime = (unsigned long)NewSampleTime;
 }
+
 
 /* SetOutputLimits(...)****************************************************
  *     This function will be used far more often than SetInputLimits.  while
@@ -167,6 +190,7 @@ void PID::SetOutputLimits(double Min, double Max) {
   }
 }
 
+
 /* SetMode(...)****************************************************************
  * Allows the controller Mode to be set to manual (0) or Automatic (non-zero)
  * when the transition from manual to auto occurs, the controller is
@@ -181,6 +205,7 @@ void PID::SetMode(int Mode) {
   inAuto = newAuto;
 }
 
+
 /* Initialize()****************************************************************
  *  does all the things that need to happen to ensure a bumpless transfer
  *  from manual to automatic mode.
@@ -191,6 +216,7 @@ void PID::Initialize() {
   if(outputSum > outMax) outputSum = outMax;
   else if(outputSum < outMin) outputSum = outMin;
 }
+
 
 /* SetControllerDirection(...)*************************************************
  * The PID will either be connected to a DIRECT acting process (+Output leads
@@ -207,6 +233,7 @@ void PID::SetControllerDirection(int Direction) {
   controllerDirection = Direction;
 }
 
+
 /* Status Funcions*************************************************************
  * Just because you set the Kp=-1 doesn't mean it actually happened.  these
  * functions query the internal state of the PID.  they're here for display
@@ -217,4 +244,3 @@ double PID::GetKi() { return dispKi; }
 double PID::GetKd() { return dispKd; }
 int PID::GetMode() { return inAuto ? AUTOMATIC : MANUAL; }
 int PID::GetDirection() { return controllerDirection; }
-
