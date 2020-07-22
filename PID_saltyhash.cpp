@@ -47,6 +47,12 @@ PID::PID(double* Input, double* Output, double* Setpoint,
 {}
 
 
+bool PID::ReadyToCompute(unsigned long now) {
+  unsigned long timeChange = now - lastTime;
+  return timeChange >= SampleTime;
+}
+
+
 /* Compute() **********************************************************************
  *     This, as they say, is where the magic happens.  this function should be called
  *   every time "void loop()" executes.  the function will decide for itself whether a new
@@ -54,10 +60,11 @@ PID::PID(double* Input, double* Output, double* Setpoint,
  *   false when nothing has been done.
  **********************************************************************************/
 bool PID::Compute() {
-  if (!inAuto) return false;
-  unsigned long now = millis();
-  unsigned long timeChange = (now - lastTime);
-  if (timeChange < SampleTime) {
+  if (!inAuto) {
+    return false;
+  }
+  const unsigned long now = millis();
+  if (!ReadyToCompute(now)) {
     return false;
   }
 
@@ -88,6 +95,7 @@ bool PID::Compute() {
   /*Remember some variables for next time*/
   lastInput = input;
   lastTime = now;
+
   return true;
 }
 
