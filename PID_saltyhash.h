@@ -26,6 +26,10 @@ class PID
 	
     void SetMode(int Mode);               // * sets PID to either Manual (0) or Auto (non-0)
 
+    /* Returns true if enough time has passed for the PID calculation to be performed.
+     * This is useful for synchronizing external measurements that need to be done before
+     * Compute() is called.
+     */
     bool ReadyToCompute(unsigned long now);
 
     bool Compute();                       // * performs the PID calculation.  it should be
