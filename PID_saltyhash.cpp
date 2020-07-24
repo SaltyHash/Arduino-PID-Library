@@ -76,13 +76,15 @@ bool PID::ReadyToCompute(const unsigned long now) {
  *   false when nothing has been done.
  **********************************************************************************/
 bool PID::Compute() {
-  // Do nothing if the controller is not in AUTOMATIC mode,
-  // or if it is not yet time to compute.
-  if (!inAuto) {
-    return false;
-  }
+  // Do nothing if it is not yet time to compute
   const unsigned long now = millis();
   if (!ReadyToCompute(now)) {
+    return false;
+  }
+  lastTime = now;
+
+  // Do nothing if the controller is not in AUTOMATIC mode
+  if (!inAuto) {
     return false;
   }
 
@@ -108,7 +110,7 @@ bool PID::Compute() {
 
   /*Remember some variables for next time*/
   lastInput = input;
-  lastTime = now;
+  //lastTime = now;
 
   return true;
 }
@@ -238,3 +240,5 @@ double PID::GetKi() { return dispKi; }
 double PID::GetKd() { return dispKd; }
 int PID::GetMode() { return inAuto ? AUTOMATIC : MANUAL; }
 int PID::GetDirection() { return controllerDirection; }
+double PID::GetOutputMin() { return outMin; }
+double PID::GetOutputMax() { return outMax; }
